@@ -8,10 +8,9 @@ typedef struct TrieNode TrieNode;
 
 struct TrieNode
 {
-    unsigned char _char;
     uint16_t value;
     TrieNode *children[N];
-    int is_leaf;
+    bool is_leaf;
 };
 
 TrieNode *make_trie_node(unsigned char _char)
@@ -19,8 +18,7 @@ TrieNode *make_trie_node(unsigned char _char)
     TrieNode *node = (TrieNode *)calloc(1, sizeof(TrieNode));
     for (int i = 0; i < N; i++)
         node->children[i] = NULL;
-    node->is_leaf = 0;
-    node->_char = _char;
+    node->is_leaf = false;
     return node;
 }
 
@@ -52,7 +50,7 @@ TrieNode *insert_char(TrieNode *root, unsigned char _char)
     {
         root->children[idx] = make_trie_node(_char);
         TrieNode *temp = root->children[idx];
-        temp->is_leaf = 1;
+        temp->is_leaf = true;
         temp->value = (uint16_t)_char;
     }
 
@@ -74,7 +72,7 @@ TrieNode *insert_string(TrieNode *root, unsigned char *string, uint16_t value)
         temp = temp->children[idx];
     }
 
-    temp->is_leaf = 1;
+    temp->is_leaf = true;
     temp->value = value;
     return root;
 }
@@ -91,7 +89,7 @@ bool search_trie(TrieNode *root, unsigned char *word, TrieNode **node_found)
         temp = temp->children[position];
     }
 
-    if (temp != NULL && temp->is_leaf == 1)
+    if (temp != NULL && temp->is_leaf == true)
     {
         *node_found = temp;
         return true;
@@ -149,12 +147,12 @@ unsigned char *find_longest_prefix(TrieNode *root, unsigned char *word)
     return longest_prefix;
 }
 
-int is_leaf_node(TrieNode *root, unsigned char *word)
+bool is_leaf_node(TrieNode *root, unsigned char *word)
 {
     TrieNode *temp = root;
-    for (int i = 0; word[i]; i++)
+    for (unsigned int i = 0; word[i]; i++)
     {
-        int position = (int)word[i];
+        unsigned int position = (unsigned int)word[i];
         if (temp->children[position])
         {
             temp = temp->children[position];
