@@ -21,13 +21,12 @@ int main(void)
     uint16_t current_code = 0;
 
     // Get the first byte from the stream
-    sequence[0] = fgetc(file);
+    sequence[sequence_idx++] = fgetc(file);
     if (feof(file))
     {
         printf("File is empty.\n");
         return 1;
     }
-    sequence_idx++;
 
     // Create the dictionary (Trie tree structure)
     TrieNode *tree = make_trie_tree();
@@ -77,6 +76,11 @@ int main(void)
             sequence_idx = 1;
         }
     }
+
+    // TODO: Calculate the size of the compressed output and compare it with the size of the original uncompressed file.
+    // TODO: Try to manually recreate the decompression and check that the output matches with the original file.
+    // TODO: Store the codes in the output file.
+    // TODO: Store the dictionary in the end of the output file.
 
     fclose(file);
     free_trie_node(tree);
