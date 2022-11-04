@@ -13,18 +13,13 @@ struct TrieNode
     bool is_leaf;
 };
 
-TrieNode *make_trie_node(unsigned char _char)
+TrieNode *make_trie_node()
 {
     TrieNode *node = (TrieNode *)calloc(1, sizeof(TrieNode));
     for (int i = 0; i < N; i++)
         node->children[i] = NULL;
     node->is_leaf = false;
     return node;
-}
-
-TrieNode *make_trie_tree()
-{
-    return make_trie_node('\0');
 }
 
 void free_trie_node(TrieNode *node)
@@ -43,15 +38,15 @@ void free_trie_node(TrieNode *node)
     free(node);
 }
 
-TrieNode *insert_char(TrieNode *root, unsigned char _char)
+TrieNode *insert_char(TrieNode *root, unsigned char _char, uint16_t value)
 {
     unsigned int idx = (unsigned int)_char;
     if (root->children[idx] == NULL)
     {
-        root->children[idx] = make_trie_node(_char);
+        root->children[idx] = make_trie_node();
         TrieNode *temp = root->children[idx];
         temp->is_leaf = true;
-        temp->value = (uint16_t)_char;
+        temp->value = value;
     }
 
     return root;
@@ -66,7 +61,7 @@ TrieNode *insert_string(TrieNode *root, unsigned char *string, uint16_t value)
         unsigned int idx = (unsigned int)string[i];
         if (temp->children[idx] == NULL)
         {
-            temp->children[idx] = make_trie_node(string[i]);
+            temp->children[idx] = make_trie_node();
         }
 
         temp = temp->children[idx];
@@ -88,6 +83,18 @@ bool search_trie(TrieNode *root, unsigned char *word, TrieNode **node_found)
             return false;
         temp = temp->children[position];
     }
+
+    if (temp != NULL && temp->is_leaf == true)
+    {
+        *node_found = temp;
+        return true;
+    }
+    return false;
+}
+
+bool search_char(TrieNode *root, unsigned char _char, TrieNode **node_found)
+{
+    TrieNode *temp = root->children[(unsigned int)_char];
 
     if (temp != NULL && temp->is_leaf == true)
     {

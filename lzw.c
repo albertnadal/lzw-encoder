@@ -1,10 +1,8 @@
 // gcc lzw.c -o lzw
 #include <stdio.h>
 #include <stdbool.h>
+#include <assert.h>
 #include "trie.c"
-
-#define SEQUENCE_MAX_SIZE 1024
-#define CODE_MAX_VALUE 65536 // 16 bits per code
 
 int main(void)
 {
@@ -16,12 +14,8 @@ int main(void)
         return 1;
     }
 
-    unsigned char sequence[SEQUENCE_MAX_SIZE];
-    unsigned int sequence_idx = 0;
-    uint16_t current_code = 0;
-
     // Get the first byte from the stream
-    sequence[sequence_idx++] = fgetc(file);
+    unsigned char c = fgetc(file);
     if (feof(file))
     {
         printf("File is empty.\n");
@@ -29,58 +23,59 @@ int main(void)
     }
 
     // Create the dictionary (Trie tree structure)
-    TrieNode *tree = make_trie_tree();
+    TrieNode *tree = make_trie_node(); // Root node
 
-    // Initialize the dictionary with single char sequences (0 to 255 codes)
+    // Initialize the code to 0
+    uint16_t current_code = 0;
+
+    /*
+      1     Initialize table with single character strings
+      2     P = first input character
+      3     WHILE not end of input stream
+      4          C = next input character
+      5          IF P + C is in the string table
+      6            P = P + C
+      7          ELSE
+      8            add P + C to the string table
+      9            output the code for P
+      10           P = C
+      11    END WHILE
+      12    output code for P
+    */
+
+    // Initialize table with single character strings
     for (current_code = 0; current_code < 256; current_code++)
     {
-        insert_char(tree, (unsigned char)current_code);
+        insert_char(tree, (unsigned char)current_code, current_code);
     }
 
-    unsigned char next_char;
-    TrieNode *node;
+    TrieNode *p;
+    bool char_found = search_char(tree, c, &p);
+    assert(char_found);
 
     while (!feof(file))
     {
-        next_char = fgetc(file);
-        sequence[sequence_idx] = next_char;
-        sequence[++sequence_idx] = '\0';
-        bool need_reset_sequence = false;
+        c = fgetc(file); // C = next input character
 
-        if (search_trie(tree, sequence, &node) == false)
+        TrieNode *p_plus_c;
+        if (search_char(p, c, &p_plus_c) == true)
         {
-            if (current_code < CODE_MAX_VALUE - 1)
-            {
-                insert_string(tree, sequence, current_code++);
-            }
-            else
-            {
-                printf(" Reached code max value. No more available codes left.\n");
-            }
-
-            need_reset_sequence = true;
+            p = p_plus_c; // P = P + C
         }
-        else if (sequence_idx + 1 >= SEQUENCE_MAX_SIZE)
+        else
         {
-            need_reset_sequence = true;
-        }
-
-        if (need_reset_sequence)
-        {
-            sequence[sequence_idx - 1] = '\0';
-            search_trie(tree, sequence, &node);
-            printf("%u,", node->value); // TODO: Append the code in an output file in a 12 bit packet
-
-            sequence[0] = next_char;
-            sequence[1] = '\0';
-            sequence_idx = 1;
+            insert_char(p, c, current_code++);          // add P + C to the string table
+            printf("%u,", p->value);                    // output the code for P
+            bool char_found = search_char(tree, c, &p); // P = C
+            assert(char_found);
         }
     }
 
-    // TODO: Calculate the size of the compressed output and compare it with the size of the original uncompressed file.
-    // TODO: Try to manually recreate the decompression and check that the output matches with the original file.
-    // TODO: Store the codes in the output file.
-    // TODO: Store the dictionary in the end of the output file.
+    printf("%u,", p->value); // output the code for P
+
+    // TODO: Store the codes in the output file using 16 bits to store each code
+    // TODO: Implement function to extract the dictionary from the Trie tree 
+    // TODO: Append the dictionary in the end of the output file.
 
     fclose(file);
     free_trie_node(tree);
