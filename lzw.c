@@ -1,22 +1,36 @@
-// gcc lzw.c -o lzw
+// gcc -O1 lzw.c -o lzw
 #include <stdio.h>
 #include <stdbool.h>
 #include <assert.h>
 #include "trie.c"
 
+static inline void output_code(FILE *file, uint16_t code)
+{
+    fwrite(&code, sizeof(uint16_t), 1, file);
+    printf("%u,", code);
+}
+
 int main(void)
 {
-    FILE *file = fopen("sample.txt", "r");
+    FILE *input_file = fopen("input.txt", "r");
 
-    if (!file)
+    if (!input_file)
     {
-        printf("Failed opening file.\n");
+        printf("Failed opening input file.\n");
         return 1;
     }
 
-    // Get the first byte from the stream
-    unsigned char c = fgetc(file);
-    if (feof(file))
+    FILE *output_file = fopen("output.bin", "wb");
+
+    if (!output_file)
+    {
+        printf("Failed opening output file.\n");
+        return 1;
+    }
+
+    // Get the first byte from the input file
+    unsigned char c = fgetc(input_file);
+    if (feof(input_file))
     {
         printf("File is empty.\n");
         return 1;
@@ -53,9 +67,9 @@ int main(void)
     bool char_found = search_char(tree, c, &p);
     assert(char_found);
 
-    while (!feof(file))
+    while (!feof(input_file))
     {
-        c = fgetc(file); // C = next input character
+        c = fgetc(input_file); // C = next input character
 
         TrieNode *p_plus_c;
         if (search_char(p, c, &p_plus_c) == true)
@@ -65,19 +79,20 @@ int main(void)
         else
         {
             insert_char(p, c, current_code++);          // add P + C to the string table
-            printf("%u,", p->value);                    // output the code for P
+            output_code(output_file, p->value);         // output the code for P
             bool char_found = search_char(tree, c, &p); // P = C
             assert(char_found);
         }
     }
 
-    printf("%u,", p->value); // output the code for P
+    output_code(output_file, p->value); // output the code for P
 
-    // TODO: Store the codes in the output file using 16 bits to store each code
-    // TODO: Implement function to extract the dictionary from the Trie tree 
+    // TODO: Implement function to extract the dictionary from the Trie tree
     // TODO: Append the dictionary in the end of the output file.
+    // TODO: Use only 12 bits, instead of the current 16 bits, to store the codes to the output file.
 
-    fclose(file);
+    fclose(output_file);
+    fclose(input_file);
     free_trie_node(tree);
 
     return 0;
