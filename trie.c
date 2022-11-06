@@ -25,22 +25,6 @@ TrieNode *make_trie_node()
     return node;
 }
 
-int dictionary_size = 0;
-
-void write_dictionary_to_file(FILE *file, TrieNode *node)
-{
-    for (unsigned int i = 0; i < N; i++)
-    {
-        if (node->children[i] != NULL && node->children[i]->is_leaf)
-        {
-            fwrite(&i, sizeof(unsigned char), 1, file);
-            fwrite(&(node->children[i]->value), sizeof(uint16_t), 1, file);
-            dictionary_size += (sizeof(unsigned char) + sizeof(uint16_t));
-            write_dictionary_to_file(file, node->children[i]);
-        }
-    }
-}
-
 void free_trie_node(TrieNode *node)
 {
     for (unsigned int i = 0; i < N; i++)

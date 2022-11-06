@@ -91,11 +91,9 @@ int main(void)
     }
 
     write_code_to_file(output_file, p->value);   // output the code for P
-    write_dictionary_to_file(output_file, tree); // serialize and append the table at the end of the output file
 
     printf("ORIGINAL FILE SIZE: %d bytes\n", original_file_size);
     printf("COMPRESSED FILE SIZE: %d bytes\n", (int)compressed_file_size);
-    printf("DICTIONARY SIZE: %d bytes\n", dictionary_size);
 
     // TODO: Use only 12 bits, instead of the current 16 bits, to store the codes to the output file.
 
