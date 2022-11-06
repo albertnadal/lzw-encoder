@@ -1,16 +1,18 @@
 // gcc -O1 compress.c -o compress
+#include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <assert.h>
 #include "trie.c"
+#include "constants.h"
 
 int original_file_size = 0;
-float compressed_file_size = 0.0f;
+int compressed_file_size = 0;
 
 static inline void write_code_to_file(FILE *file, uint16_t code)
 {
     fwrite(&code, sizeof(uint16_t), 1, file);
-    compressed_file_size += 1.5; // 16 bits -> 2 bytes | 12 bits -> 1.5 bytes
+    compressed_file_size += 2; // 16 bits -> 2 bytes
 }
 
 int main(void)
@@ -23,7 +25,7 @@ int main(void)
         return 1;
     }
 
-    FILE *output_file = fopen("output.bin", "wb");
+    FILE *output_file = fopen("compressed.dat", "wb");
 
     if (!output_file)
     {
@@ -93,7 +95,7 @@ int main(void)
     write_code_to_file(output_file, p->value);   // output the code for P
 
     printf("ORIGINAL FILE SIZE: %d bytes\n", original_file_size);
-    printf("COMPRESSED FILE SIZE: %d bytes\n", (int)compressed_file_size);
+    printf("COMPRESSED FILE SIZE: %d bytes\n", compressed_file_size);
 
     // TODO: Use only 12 bits, instead of the current 16 bits, to store the codes to the output file.
 

@@ -1,0 +1,1 @@
+#define MAX_SEQUENCE_SIZE 1024
