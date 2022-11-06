@@ -1,13 +1,16 @@
-// gcc -O1 lzw.c -o lzw
+// gcc -O1 compress.c -o compress
 #include <stdio.h>
 #include <stdbool.h>
 #include <assert.h>
 #include "trie.c"
 
-static inline void output_code(FILE *file, uint16_t code)
+int original_file_size = 0;
+float compressed_file_size = 0.0f;
+
+static inline void write_code_to_file(FILE *file, uint16_t code)
 {
     fwrite(&code, sizeof(uint16_t), 1, file);
-    printf("%u,", code);
+    compressed_file_size += 1.5; // 16 bits -> 2 bytes | 12 bits -> 1.5 bytes
 }
 
 int main(void)
@@ -30,6 +33,7 @@ int main(void)
 
     // Get the first byte from the input file
     unsigned char c = fgetc(input_file);
+    original_file_size++;
     if (feof(input_file))
     {
         printf("File is empty.\n");
@@ -70,6 +74,7 @@ int main(void)
     while (!feof(input_file))
     {
         c = fgetc(input_file); // C = next input character
+        original_file_size++;
 
         TrieNode *p_plus_c;
         if (search_char(p, c, &p_plus_c) == true)
@@ -79,16 +84,19 @@ int main(void)
         else
         {
             insert_char(p, c, current_code++);          // add P + C to the string table
-            output_code(output_file, p->value);         // output the code for P
+            write_code_to_file(output_file, p->value);  // output the code for P
             bool char_found = search_char(tree, c, &p); // P = C
             assert(char_found);
         }
     }
 
-    output_code(output_file, p->value); // output the code for P
+    write_code_to_file(output_file, p->value);   // output the code for P
+    write_dictionary_to_file(output_file, tree); // serialize and append the table at the end of the output file
 
-    // TODO: Implement function to extract the dictionary from the Trie tree
-    // TODO: Append the dictionary in the end of the output file.
+    printf("ORIGINAL FILE SIZE: %d bytes\n", original_file_size);
+    printf("COMPRESSED FILE SIZE: %d bytes\n", (int)compressed_file_size);
+    printf("DICTIONARY SIZE: %d bytes\n", dictionary_size);
+
     // TODO: Use only 12 bits, instead of the current 16 bits, to store the codes to the output file.
 
     fclose(output_file);
