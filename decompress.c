@@ -16,6 +16,11 @@ void free_table(char *table[])
     }
 }
 
+static inline void write_contents_to_file(FILE *file, char *buffer, unsigned int size)
+{
+    fwrite(buffer, sizeof(char) * size, 1, file);
+}
+
 int main(void)
 {
     FILE *input_file = fopen("compressed.dat", "r");
@@ -58,7 +63,7 @@ int main(void)
       8               S = S + C
       9       ELSE
       10              S = translation of NEW
-      11       output S
+      11       output translation of S
       12       C = first character of S
       13       OLD + C to the string table
       14       OLD = NEW
@@ -74,16 +79,15 @@ int main(void)
     }
 
     assert(old < 256);
-    printf("%s", table[old]);
+    write_contents_to_file(output_file, table[old], 1); // output translation of OLD
 
     char c = table[old][0];
     char s[MAX_SEQUENCE_SIZE];
 
     while (!feof(input_file))
     {
+        assert(current_code < 0xFFFF);
         fread(&new, sizeof(uint16_t), 1, input_file);
-
-        assert(new < 0xFFFF);
 
         if (table[new] == NULL)
         {
@@ -94,15 +98,12 @@ int main(void)
             strcpy(s, table[new]); // S = translation of NEW
         }
 
-        printf("%s", s); // output S
-        c = s[0];        // C = first character of S
+        write_contents_to_file(output_file, s, strlen(s)); // output translation of S
+        c = s[0];                                          // C = first character of S
         table[current_code] = (char *)malloc((sizeof(char) * strlen(table[old])) + 2);
         sprintf(table[current_code++], "%s%c", table[old], c); // OLD + C to the string table
         old = new;                                             // OLD = NEW
     }
-
-    // TODO: Find and fix a potential memory leak when decoding a large amount of compressed data.
-    // TODO: Write decoded sequences to output file.
 
     fclose(output_file);
     fclose(input_file);
