@@ -7,12 +7,10 @@
 #include "constants.h"
 
 int original_file_size = 0;
-int compressed_file_size = 0;
 
 static inline void write_code_to_file(FILE *file, uint16_t code)
 {
     fwrite(&code, sizeof(uint16_t), 1, file);
-    compressed_file_size += 2; // 16 bits -> 2 bytes
 }
 
 int main(void)
@@ -35,7 +33,6 @@ int main(void)
 
     // Get the first byte from the input file
     unsigned char c = fgetc(input_file);
-    original_file_size++;
     if (feof(input_file))
     {
         printf("File is empty.\n");
@@ -76,28 +73,23 @@ int main(void)
     while (!feof(input_file))
     {
         c = fgetc(input_file); // C = next input character
-        original_file_size++;
 
         TrieNode *p_plus_c;
-        if (search_char(p, c, &p_plus_c) == true)
+        if (search_char(p, c, &p_plus_c) == true) // IF P + C is in the string table
         {
             p = p_plus_c; // P = P + C
         }
         else
         {
-            insert_char(p, c, current_code++);          // add P + C to the string table
+            insert_char(p, c, current_code++); // add P + C to the string table
             write_code_to_file(output_file, p->value);  // output the code for P
             bool char_found = search_char(tree, c, &p); // P = C
             assert(char_found);
         }
     }
 
-    write_code_to_file(output_file, p->value);   // output the code for P
-
-    printf("ORIGINAL FILE SIZE: %d bytes\n", original_file_size);
-    printf("COMPRESSED FILE SIZE: %d bytes\n", compressed_file_size);
-
-    // TODO: Use only 12 bits, instead of the current 16 bits, to store the codes to the output file.
+    // TODO: Automatically extend the code size on reach its max value
+    write_code_to_file(output_file, p->value); // output the code for P
 
     fclose(output_file);
     fclose(input_file);
