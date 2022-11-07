@@ -39,8 +39,8 @@ int main(void)
         return 1;
     }
 
-    long int file_offset;
-    fread(&file_offset, sizeof(long int), 1, input_file);
+    long int file_offset_four_bytes_codes;
+    fread(&file_offset_four_bytes_codes, sizeof(long int), 1, input_file);
 
     // Read the first code (uint16_t) from the input file
     uint32_t old, new, current_code = 0;
@@ -89,7 +89,7 @@ int main(void)
 
     while (!feof(input_file))
     {
-        fread(&new, (ftell(input_file) < file_offset) ? sizeof(uint16_t) : sizeof(uint32_t), 1, input_file);
+        fread(&new, (ftell(input_file) < file_offset_four_bytes_codes) ? sizeof(uint16_t) : sizeof(uint32_t), 1, input_file);
 
         if (table[new] == NULL)
         {

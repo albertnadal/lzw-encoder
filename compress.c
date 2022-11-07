@@ -6,9 +6,9 @@
 #include "trie.c"
 #include "constants.h"
 
-static inline void write_code_to_file(FILE *file, uint32_t code, bool is_32bit_code)
+static inline void write_code_to_file(FILE *file, uint32_t code, size_t bytes_per_code)
 {
-    fwrite(&code, is_32bit_code ? sizeof(uint32_t) : sizeof(uint16_t), 1, file);
+    fwrite(&code, bytes_per_code, 1, file);
 }
 
 int main(void)
@@ -73,7 +73,7 @@ int main(void)
     TrieNode *p;
     bool char_found = search_char(tree, c, &p);
     assert(char_found);
-    bool use_32bit_codes = false;
+    size_t bytes_per_code = 2; //16 bits initially
 
     while (!feof(input_file))
     {
@@ -87,20 +87,20 @@ int main(void)
         else
         {
             insert_char(p, c, current_code++);                          // add P + C to the string table
-            write_code_to_file(output_file, p->value, use_32bit_codes); // output the code for P
+            write_code_to_file(output_file, p->value, bytes_per_code); // output the code for P
             bool char_found = search_char(tree, c, &p);                 // P = C
             assert(char_found);
 
             if (current_code == 0xFFFF)
             {
-                use_32bit_codes = true;
+                bytes_per_code = 4; // 32 bits
                 file_offset = ftell(output_file);
             }
         }
     }
 
     // TODO: Store the maximum code generated in the header of the output file.
-    write_code_to_file(output_file, p->value, use_32bit_codes); // output the code for P
+    write_code_to_file(output_file, p->value, bytes_per_code); // output the code for P
 
     fseek(output_file, 0, SEEK_SET);
     fwrite(&file_offset, sizeof(long int), 1, output_file);
