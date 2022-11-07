@@ -9,7 +9,7 @@ typedef struct TrieNode TrieNode;
 
 struct TrieNode
 {
-    uint16_t value;
+    uint32_t value;
     TrieNode *children[N];
     bool is_leaf;
 };
@@ -41,7 +41,7 @@ void free_trie_node(TrieNode *node)
     free(node);
 }
 
-TrieNode *insert_char(TrieNode *root, unsigned char _char, uint16_t value)
+TrieNode *insert_char(TrieNode *root, unsigned char _char, uint32_t value)
 {
     unsigned int idx = (unsigned int)_char;
     if (root->children[idx] == NULL)
@@ -55,7 +55,7 @@ TrieNode *insert_char(TrieNode *root, unsigned char _char, uint16_t value)
     return root;
 }
 
-TrieNode *insert_string(TrieNode *root, unsigned char *string, uint16_t value)
+TrieNode *insert_string(TrieNode *root, unsigned char *string, uint32_t value)
 {
     TrieNode *temp = root;
 

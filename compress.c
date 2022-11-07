@@ -6,11 +6,9 @@
 #include "trie.c"
 #include "constants.h"
 
-int original_file_size = 0;
-
-static inline void write_code_to_file(FILE *file, uint16_t code)
+static inline void write_code_to_file(FILE *file, uint32_t code, bool is_32bit_code)
 {
-    fwrite(&code, sizeof(uint16_t), 1, file);
+    fwrite(&code, is_32bit_code ? sizeof(uint32_t) : sizeof(uint16_t), 1, file);
 }
 
 int main(void)
@@ -31,6 +29,9 @@ int main(void)
         return 1;
     }
 
+    // Reserve space to store the position in the file where codes will be stored using 32 bits
+    fseek(output_file, sizeof(long int), SEEK_SET);
+
     // Get the first byte from the input file
     unsigned char c = fgetc(input_file);
     if (feof(input_file))
@@ -39,11 +40,14 @@ int main(void)
         return 1;
     }
 
+    // Position in the file where codes are stored using 32 bits instead of 16 bits
+    long int file_offset = -1;
+
     // Create the dictionary (Trie tree structure)
     TrieNode *tree = make_trie_node(); // Root node
 
     // Initialize the code to 0
-    uint16_t current_code = 0;
+    uint32_t current_code = 0;
 
     /*
       1     Initialize table with single character strings
@@ -69,6 +73,7 @@ int main(void)
     TrieNode *p;
     bool char_found = search_char(tree, c, &p);
     assert(char_found);
+    bool use_32bit_codes = false;
 
     while (!feof(input_file))
     {
@@ -81,15 +86,24 @@ int main(void)
         }
         else
         {
-            insert_char(p, c, current_code++); // add P + C to the string table
-            write_code_to_file(output_file, p->value);  // output the code for P
-            bool char_found = search_char(tree, c, &p); // P = C
+            insert_char(p, c, current_code++);                          // add P + C to the string table
+            write_code_to_file(output_file, p->value, use_32bit_codes); // output the code for P
+            bool char_found = search_char(tree, c, &p);                 // P = C
             assert(char_found);
+
+            if (current_code == 0xFFFF)
+            {
+                use_32bit_codes = true;
+                file_offset = ftell(output_file);
+            }
         }
     }
 
-    // TODO: Automatically extend the code size on reach its max value
-    write_code_to_file(output_file, p->value); // output the code for P
+    // TODO: Store the maximum code generated in the header of the output file.
+    write_code_to_file(output_file, p->value, use_32bit_codes); // output the code for P
+
+    fseek(output_file, 0, SEEK_SET);
+    fwrite(&file_offset, sizeof(long int), 1, output_file);
 
     fclose(output_file);
     fclose(input_file);

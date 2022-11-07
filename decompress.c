@@ -7,7 +7,7 @@
 
 void free_table(char *table[])
 {
-    for (uint16_t code = 0; code < 0xFFFF; code++)
+    for (uint32_t code = 0; code < 1000000; code++)
     {
         if (table[code] != NULL)
         {
@@ -39,8 +39,11 @@ int main(void)
         return 1;
     }
 
+    long int file_offset;
+    fread(&file_offset, sizeof(long int), 1, input_file);
+
     // Read the first code (uint16_t) from the input file
-    uint16_t old, new, current_code = 0;
+    uint32_t old, new, current_code = 0;
     fread(&old, sizeof(uint16_t), 1, input_file);
 
     if (feof(input_file))
@@ -50,7 +53,7 @@ int main(void)
     }
 
     // Declare the table
-    char *table[0xFFFF] = {NULL}; // 0xFFFF = 2^16 = 65535 available codes
+    char *table[1000000] = {NULL}; // 0xFFFF = 2^16 = 65535 available codes
 
     /*
       1    Initialize table with single character strings
@@ -86,8 +89,7 @@ int main(void)
 
     while (!feof(input_file))
     {
-        assert(current_code < 0xFFFF);
-        fread(&new, sizeof(uint16_t), 1, input_file);
+        fread(&new, (ftell(input_file) < file_offset) ? sizeof(uint16_t) : sizeof(uint32_t), 1, input_file);
 
         if (table[new] == NULL)
         {
