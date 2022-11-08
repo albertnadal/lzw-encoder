@@ -56,7 +56,12 @@ int main(void)
     }
 
     // Declare the table
-    char **table = (char **)calloc(total_codes, sizeof(char*)); // Initializes all allocated char pointers to 0 (NULL)
+    char **table = (char **)calloc(total_codes, sizeof(char *)); // Initializes all allocated char pointers to 0 (NULL)
+    if (table == NULL)
+    {
+        printf("Can't allocate memory.");
+        return 0;
+    }
 
     /*
       1    Initialize table with single character strings
@@ -80,6 +85,11 @@ int main(void)
     for (current_code = 0; current_code < 256; current_code++)
     {
         table[current_code] = (char *)malloc(sizeof(char) + 1);
+        if (table[current_code] == NULL)
+        {
+            printf("Can't allocate memory.");
+            return 0;
+        }
         table[current_code][0] = (char)current_code;
         table[current_code][1] = '\0';
     }
@@ -117,6 +127,11 @@ int main(void)
         write_contents_to_file(output_file, s, strlen(s)); // output translation of S
         c = s[0];                                          // C = first character of S
         table[current_code] = (char *)malloc((sizeof(char) * strlen(table[old])) + 2);
+        if (table[current_code] == NULL)
+        {
+            printf("Can't allocate memory.");
+            return 0;
+        }
         sprintf(table[current_code++], "%s%c", table[old], c); // OLD + C to the string table
         old = new;                                             // OLD = NEW
     }
