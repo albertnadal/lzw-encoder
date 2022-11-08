@@ -32,6 +32,9 @@ int main(void)
     // Reserve space to store the position in the file where codes will be stored using 32 bits
     fseek(output_file, sizeof(long int), SEEK_SET);
 
+    // Reserve space to store the value of the maximum code
+    fseek(output_file, sizeof(uint32_t), SEEK_CUR);
+
     // Get the first byte from the input file
     unsigned char c = fgetc(input_file);
     if (feof(input_file))
@@ -99,11 +102,12 @@ int main(void)
         }
     }
 
-    // TODO: Store the maximum code generated in the header of the output file.
     write_code_to_file(output_file, p->value, bytes_per_code); // output the code for P
 
+    // Set header values (file offset for 32bit codes and max code value)
     fseek(output_file, 0, SEEK_SET);
     fwrite(&file_offset, sizeof(long int), 1, output_file);
+    fwrite(&current_code, sizeof(uint32_t), 1, output_file);
 
     fclose(output_file);
     fclose(input_file);

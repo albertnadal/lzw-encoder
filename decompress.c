@@ -42,6 +42,9 @@ int main(void)
     long int file_offset_four_bytes_codes;
     fread(&file_offset_four_bytes_codes, sizeof(long int), 1, input_file);
 
+    uint32_t total_codes;
+    fread(&total_codes, sizeof(uint32_t), 1, input_file);
+
     // Read the first code (uint16_t) from the input file
     uint32_t old, new, current_code = 0;
     fread(&old, sizeof(uint16_t), 1, input_file);
@@ -53,7 +56,7 @@ int main(void)
     }
 
     // Declare the table
-    char *table[1000000] = {NULL}; // 0xFFFF = 2^16 = 65535 available codes
+    char **table = (char **)calloc(total_codes, sizeof(char*)); // Initializes all allocated char pointers to 0 (NULL)
 
     /*
       1    Initialize table with single character strings
@@ -86,10 +89,21 @@ int main(void)
 
     char c = table[old][0];
     char s[MAX_SEQUENCE_SIZE];
+    size_t code_size;
 
     while (!feof(input_file))
     {
-        fread(&new, (ftell(input_file) < file_offset_four_bytes_codes) ? sizeof(uint16_t) : sizeof(uint32_t), 1, input_file);
+        if (ftell(input_file) < file_offset_four_bytes_codes)
+        {
+            new = 0;
+            code_size = sizeof(uint16_t);
+        }
+        else
+        {
+            code_size = sizeof(uint32_t);
+        }
+
+        fread(&new, code_size, 1, input_file);
 
         if (table[new] == NULL)
         {
