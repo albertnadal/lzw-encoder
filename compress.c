@@ -76,7 +76,7 @@ int main(void)
     TrieNode *p;
     bool char_found = search_char(tree, c, &p);
     assert(char_found);
-    size_t bytes_per_code = 2; //16 bits initially
+    size_t bytes_per_code = 2; // 16 bits initially
 
     while (!feof(input_file))
     {
@@ -89,9 +89,9 @@ int main(void)
         }
         else
         {
-            insert_char(p, c, current_code++);                          // add P + C to the string table
+            insert_char(p, c, current_code++);                         // add P + C to the string table
             write_code_to_file(output_file, p->value, bytes_per_code); // output the code for P
-            bool char_found = search_char(tree, c, &p);                 // P = C
+            bool char_found = search_char(tree, c, &p);                // P = C
             assert(char_found);
 
             if (current_code == 0xFFFF)
@@ -102,6 +102,8 @@ int main(void)
         }
     }
 
+    // TODO: Allow dinamically store codes using 3 bytes when needed.
+    // TODO: Limit the size (length) of new sequences using the MAX_SEQUENCE_SIZE definition to avoid out of memory issues.
     write_code_to_file(output_file, p->value, bytes_per_code); // output the code for P
 
     // Set header values (file offset for 32bit codes and max code value)
