@@ -5,9 +5,9 @@
 #include <string.h>
 #include "constants.h"
 
-void free_table(char *table[])
+void free_table(char *table[], uint32_t total_codes)
 {
-    for (uint32_t code = 0; code < 1000000; code++)
+    for (uint32_t code = 0; code < total_codes; code++)
     {
         if (table[code] != NULL)
         {
@@ -123,7 +123,7 @@ int main(void)
 
     fclose(output_file);
     fclose(input_file);
-    free_table(table);
+    free_table(table, total_codes);
 
     return 0;
 }
