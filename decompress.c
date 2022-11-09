@@ -16,6 +16,24 @@ void free_table(char *table[], uint32_t total_codes)
     }
 }
 
+void get_current_code_size(size_t *code_size, uint32_t *new, FILE *input_file, long int file_offset_24bit_codes, long int file_offset_32bit_codes)
+{
+    if ((ftell(input_file) < file_offset_24bit_codes) || (file_offset_24bit_codes == 0))
+    {
+        *new = 0;
+        *code_size = 2;
+    }
+    else if ((ftell(input_file) < file_offset_32bit_codes) || (file_offset_32bit_codes == 0))
+    {
+        *new = 0;
+        *code_size = 3;
+    }
+    else
+    {
+        *code_size = 4;
+    }
+}
+
 static inline void write_contents_to_file(FILE *file, char *buffer, unsigned int size)
 {
     fwrite(buffer, sizeof(char) * size, 1, file);
@@ -39,15 +57,14 @@ int main(void)
         return 1;
     }
 
+    uint32_t total_codes;
     long int file_offset_24bit_codes, file_offset_32bit_codes;
     fread(&file_offset_24bit_codes, sizeof(long int), 1, input_file);
     fread(&file_offset_32bit_codes, sizeof(long int), 1, input_file);
-
-    uint32_t total_codes;
     fread(&total_codes, sizeof(uint32_t), 1, input_file);
 
     // Read the first code (uint16_t) from the input file
-    uint32_t old = 0, new, current_code = 0;
+    uint32_t old = 0, new = 0, current_code = 0;
     fread(&old, sizeof(uint16_t), 1, input_file);
 
     if (feof(input_file))
@@ -100,26 +117,13 @@ int main(void)
 
     char c = table[old][0];
     char s[MAX_SEQUENCE_SIZE];
-    size_t code_size;
+    size_t current_code_size;
 
     while (!feof(input_file))
     {
-        if (ftell(input_file) < file_offset_24bit_codes)
-        {
-            new = 0;
-            code_size = 2;
-        }
-        else if ((ftell(input_file) < file_offset_32bit_codes) || (file_offset_32bit_codes == 0))
-        {
-            new = 0;
-            code_size = 3;
-        }
-        else
-        {
-            code_size = 4;
-        }
+        get_current_code_size(&current_code_size, &new, input_file, file_offset_24bit_codes, file_offset_32bit_codes);
 
-        fread(&new, code_size, 1, input_file);
+        fread(&new, current_code_size, 1, input_file);
 
         if (table[new] == NULL)
         {

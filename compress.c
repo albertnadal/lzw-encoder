@@ -111,6 +111,7 @@ int main(void)
     }
 
     // TODO: Limit the size (length) of new sequences using the MAX_SEQUENCE_SIZE definition to avoid out of memory issues.
+    // TODO: Test compression of small, medium, large and extra large files.
     write_code_to_file(output_file, p->value, bytes_per_code); // output the code for P
 
     // Set header values (file offset for 32bit codes and max code value)
