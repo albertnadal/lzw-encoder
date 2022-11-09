@@ -39,14 +39,15 @@ int main(void)
         return 1;
     }
 
-    long int file_offset_four_bytes_codes;
-    fread(&file_offset_four_bytes_codes, sizeof(long int), 1, input_file);
+    long int file_offset_24bit_codes, file_offset_32bit_codes;
+    fread(&file_offset_24bit_codes, sizeof(long int), 1, input_file);
+    fread(&file_offset_32bit_codes, sizeof(long int), 1, input_file);
 
     uint32_t total_codes;
     fread(&total_codes, sizeof(uint32_t), 1, input_file);
 
     // Read the first code (uint16_t) from the input file
-    uint32_t old, new, current_code = 0;
+    uint32_t old = 0, new, current_code = 0;
     fread(&old, sizeof(uint16_t), 1, input_file);
 
     if (feof(input_file))
@@ -60,7 +61,7 @@ int main(void)
     if (table == NULL)
     {
         printf("Can't allocate memory.");
-        return 0;
+        return 1;
     }
 
     /*
@@ -88,7 +89,7 @@ int main(void)
         if (table[current_code] == NULL)
         {
             printf("Can't allocate memory.");
-            return 0;
+            return 1;
         }
         table[current_code][0] = (char)current_code;
         table[current_code][1] = '\0';
@@ -103,14 +104,19 @@ int main(void)
 
     while (!feof(input_file))
     {
-        if (ftell(input_file) < file_offset_four_bytes_codes)
+        if (ftell(input_file) < file_offset_24bit_codes)
         {
             new = 0;
-            code_size = sizeof(uint16_t);
+            code_size = 2;
+        }
+        else if ((ftell(input_file) < file_offset_32bit_codes) || (file_offset_32bit_codes == 0))
+        {
+            new = 0;
+            code_size = 3;
         }
         else
         {
-            code_size = sizeof(uint32_t);
+            code_size = 4;
         }
 
         fread(&new, code_size, 1, input_file);
@@ -130,7 +136,7 @@ int main(void)
         if (table[current_code] == NULL)
         {
             printf("Can't allocate memory.");
-            return 0;
+            return 1;
         }
         sprintf(table[current_code++], "%s%c", table[old], c); // OLD + C to the string table
         old = new;                                             // OLD = NEW

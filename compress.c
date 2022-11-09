@@ -29,10 +29,13 @@ int main(void)
         return 1;
     }
 
-    // Reserve space to store the position in the file where codes will be stored using 32 bits
+    // Reserve space to store the position in the file where codes will be stored using 24 bits (3 bytes)
     fseek(output_file, sizeof(long int), SEEK_SET);
 
-    // Reserve space to store the value of the maximum code
+    // Reserve space to store the position in the file where codes will be stored using 32 bits (4 bytes)
+    fseek(output_file, sizeof(long int), SEEK_CUR);
+
+    // Reserve space to store the value of the maximum code generated
     fseek(output_file, sizeof(uint32_t), SEEK_CUR);
 
     // Get the first byte from the input file
@@ -43,8 +46,8 @@ int main(void)
         return 1;
     }
 
-    // Position in the file where codes are stored using 32 bits instead of 16 bits
-    long int file_offset = -1;
+    // Positions in the file where codes are stored using 24 bits and 32 bits
+    long int file_offset_24bit_codes = 0, file_offset_32bit_codes = 0;
 
     // Create the dictionary (Trie tree structure)
     TrieNode *tree = make_trie_node(); // Root node
@@ -94,21 +97,26 @@ int main(void)
             bool char_found = search_char(tree, c, &p);                // P = C
             assert(char_found);
 
-            if (current_code == 0xFFFF)
+            if (current_code == 0xFFFF) // 2^16 - 1
+            {
+                bytes_per_code = 3; // 24 bits
+                file_offset_24bit_codes = ftell(output_file);
+            }
+            else if (current_code == 0xFFFFFF) // 2^24 - 1
             {
                 bytes_per_code = 4; // 32 bits
-                file_offset = ftell(output_file);
+                file_offset_32bit_codes = ftell(output_file);
             }
         }
     }
 
-    // TODO: Allow dinamically store codes using 3 bytes when needed.
     // TODO: Limit the size (length) of new sequences using the MAX_SEQUENCE_SIZE definition to avoid out of memory issues.
     write_code_to_file(output_file, p->value, bytes_per_code); // output the code for P
 
     // Set header values (file offset for 32bit codes and max code value)
     fseek(output_file, 0, SEEK_SET);
-    fwrite(&file_offset, sizeof(long int), 1, output_file);
+    fwrite(&file_offset_24bit_codes, sizeof(long int), 1, output_file);
+    fwrite(&file_offset_32bit_codes, sizeof(long int), 1, output_file);
     fwrite(&current_code, sizeof(uint32_t), 1, output_file);
 
     fclose(output_file);
