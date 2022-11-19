@@ -1,7 +1,5 @@
 // gcc -O1 compress.c -o compress
-#include <stdlib.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include <assert.h>
 #include "trie.c"
 #include "constants.h"
