@@ -14,6 +14,7 @@ void free_table(char *table[], uint32_t total_codes)
             free(table[code]);
         }
     }
+    free(table);
 }
 
 void get_current_code_size(size_t *code_size, uint32_t *new, FILE *input_file, long int file_offset_24bit_codes, long int file_offset_32bit_codes)
@@ -88,15 +89,14 @@ int main(void)
       4    WHILE not end of input stream
       5        NEW = next input code
       6        IF NEW is not in the string table
-      7               S = translation of OLD
-      8               S = S + C
-      9       ELSE
-      10              S = translation of NEW
-      11       output translation of S
-      12       C = first character of S
-      13       OLD + C to the string table
-      14       OLD = NEW
-      15   END WHILE
+      7            S = translation of OLD + C
+      8        ELSE
+      9            S = translation of NEW
+      10       output translation of S
+      11       C = first character of S
+      12       translation of OLD + C to the string table
+      13       OLD = NEW
+      14   END WHILE
     */
 
     // Initialize table with single character strings
@@ -122,10 +122,9 @@ int main(void)
     while (!feof(input_file))
     {
         get_current_code_size(&current_code_size, &new, input_file, file_offset_24bit_codes, file_offset_32bit_codes);
+        fread(&new, current_code_size, 1, input_file); // NEW = next input code
 
-        fread(&new, current_code_size, 1, input_file);
-
-        if (table[new] == NULL)
+        if (table[new] == NULL) // IF NEW is not in the string table
         {
             sprintf(s, "%s%c", table[old], table[old][0]); // S = translation of OLD + C
         }
@@ -134,15 +133,17 @@ int main(void)
             strcpy(s, table[new]); // S = translation of NEW
         }
 
-        write_contents_to_file(output_file, s, strlen(s)); // output translation of S
         c = s[0];                                          // C = first character of S
+        if (c == EOF) break;
+
+        write_contents_to_file(output_file, s, strlen(s)); // output translation of S
         table[current_code] = (char *)malloc((sizeof(char) * strlen(table[old])) + 2);
         if (table[current_code] == NULL)
         {
             printf("Can't allocate memory.");
             return 1;
         }
-        sprintf(table[current_code++], "%s%c", table[old], c); // OLD + C to the string table
+        sprintf(table[current_code++], "%s%c", table[old], c); // translation of OLD + C to the string table
         old = new;                                             // OLD = NEW
     }
 
