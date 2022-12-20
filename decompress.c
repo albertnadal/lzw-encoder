@@ -92,7 +92,7 @@ int main(void)
       7            S = translation of OLD + C
       8        ELSE
       9            S = translation of NEW
-      10       output translation of S
+      10       output of S
       11       C = first character of S
       12       translation of OLD + C to the string table
       13       OLD = NEW
@@ -115,7 +115,7 @@ int main(void)
     assert(old < 256);
     write_contents_to_file(output_file, table[old], 1); // output translation of OLD
 
-    char c = table[old][0];
+    char c = '\n';
     char s[MAX_SEQUENCE_SIZE];
     size_t current_code_size;
 
@@ -126,7 +126,7 @@ int main(void)
 
         if (table[new] == NULL) // IF NEW is not in the string table
         {
-            sprintf(s, "%s%c", table[old], table[old][0]); // S = translation of OLD + C
+            sprintf(s, "%s%c", table[old], c); // S = translation of OLD + C
         }
         else
         {
@@ -136,7 +136,7 @@ int main(void)
         c = s[0];                                          // C = first character of S
         if (c == EOF) break;
 
-        write_contents_to_file(output_file, s, strlen(s)); // output translation of S
+        write_contents_to_file(output_file, s, strlen(s)); // output of S
         table[current_code] = (char *)malloc((sizeof(char) * strlen(table[old])) + 2);
         if (table[current_code] == NULL)
         {
